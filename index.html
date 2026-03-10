@@ -5,58 +5,116 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SƏDD Mini Scan</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://sad.adsgram.ai/js/adsgram-ad-sdk.js"></script>
     <style>
         body {
-            font-family: sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--tg-theme-bg-color, #ffffff);
             color: var(--tg-theme-text-color, #222222);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             height: 100vh; margin: 0;
+            transition: all 0.3s ease;
         }
-        .container { text-align: center; padding: 20px; }
+        .container { 
+            text-align: center; 
+            padding: 25px; 
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            width: 85%;
+            max-width: 400px;
+        }
+        h2 { margin-bottom: 20px; color: var(--tg-theme-link-color, #2481cc); }
+        input { 
+            padding: 12px; 
+            border-radius: 8px; 
+            border: 1px solid #ccc; 
+            width: 100%; 
+            margin-bottom: 15px; 
+            box-sizing: border-box;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
+        }
         button {
-            padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px;
+            padding: 14px 28px; 
+            font-size: 16px; 
+            font-weight: bold;
+            border: none; 
+            border-radius: 10px;
             background-color: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
             cursor: pointer;
+            width: 100%;
         }
-        input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 80%; margin-bottom: 10px; }
+        #result { 
+            margin-top: 20px; 
+            font-weight: bold; 
+            min-height: 24px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 id="user-name">Merhaba!</h2>
-        <p>Kontrol edilecek linki girin:</p>
-        <input type="text" id="link-input" placeholder="https://...">
-        <br>
-        <button id="scan-btn">Analiz Et</button>
+        <h2 id="user-name">SƏDD Tarayıcı</h2>
+        <p>Analiz edilecek bağlantıyı girin:</p>
+        <input type="text" id="link-input" placeholder="https://example.com">
+        <button id="scan-btn">Reklam İzle ve Analiz Et</button>
         <p id="result"></p>
     </div>
 
     <script>
-        // Telegram WebApp nesnesini başlat
         const tg = window.Telegram.WebApp;
-        tg.expand(); // Uygulamayı tam ekran yap
+        tg.expand();
 
-        // Kullanıcı adını Telegram'dan alıp ekrana yazalım
+        // Senin özel Block ID'n eklendi
+        const AdController = window.Adsgram.init({ blockId: "24789" });
+
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
             document.getElementById('user-name').innerText = "Selam, " + tg.initDataUnsafe.user.first_name + "!";
         }
 
         const btn = document.getElementById('scan-btn');
-        btn.addEventListener('click', () => {
+        const resultDiv = document.getElementById('result');
+
+        btn.addEventListener('click', async () => {
             const link = document.getElementById('link-input').value;
+            
             if(!link) {
-                tg.showAlert("Lütfen bir link girin!");
+                tg.showPopup({ message: "Lütfen bir link girin!" });
                 return;
             }
-            
-            // Simülasyon: Burada normalde bir API'ye istek atılır
-            document.getElementById('result').innerText = "Taranıyor...";
-            setTimeout(() => {
-                document.getElementById('result').innerText = "✅ Bu bağlantı güvenli görünüyor.";
-                tg.HapticFeedback.notificationOccurred('success'); // Titreşim ver
-            }, 1500);
+
+            resultDiv.innerText = "Reklam yükleniyor...";
+            resultDiv.style.color = "gray";
+
+            try {
+                // Reklamı göster
+                const adResult = await AdController.show();
+                
+                if (adResult.done) {
+                    resultDiv.innerText = "🔍 Analiz ediliyor...";
+                    tg.HapticFeedback.impactOccurred('medium');
+
+                    setTimeout(() => {
+                        // Basit kelime bazlı kontrol (Simülasyon)
+                        const lowerLink = link.toLowerCase();
+                        if(lowerLink.includes("gift") || lowerLink.includes("free") || lowerLink.includes("nitro")) {
+                            resultDiv.innerText = "❌ TEHLİKELİ: Şüpheli bağlantı!";
+                            resultDiv.style.color = "#e74c3c";
+                            tg.HapticFeedback.notificationOccurred('error');
+                        } else {
+                            resultDiv.innerText = "✅ GÜVENLİ: Temiz görünüyor.";
+                            resultDiv.style.color = "#2ecc71";
+                            tg.HapticFeedback.notificationOccurred('success');
+                        }
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error("Reklam hatası:", error);
+                resultDiv.innerText = "⚠️ Reklam izlenmedi, analiz iptal edildi.";
+                resultDiv.style.color = "orange";
+                tg.showAlert("Analizi tamamlamak için reklamı izlemelisiniz.");
+            }
         });
     </script>
 </body>
