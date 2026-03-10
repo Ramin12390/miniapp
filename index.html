@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SƏDD Mini Scan</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #222222);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0;
+        }
+        .container { text-align: center; padding: 20px; }
+        button {
+            padding: 12px 24px; font-size: 16px; border: none; border-radius: 8px;
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            cursor: pointer;
+        }
+        input { padding: 10px; border-radius: 5px; border: 1px solid #ccc; width: 80%; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="user-name">Merhaba!</h2>
+        <p>Kontrol edilecek linki girin:</p>
+        <input type="text" id="link-input" placeholder="https://...">
+        <br>
+        <button id="scan-btn">Analiz Et</button>
+        <p id="result"></p>
+    </div>
+
+    <script>
+        // Telegram WebApp nesnesini başlat
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Uygulamayı tam ekran yap
+
+        // Kullanıcı adını Telegram'dan alıp ekrana yazalım
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            document.getElementById('user-name').innerText = "Selam, " + tg.initDataUnsafe.user.first_name + "!";
+        }
+
+        const btn = document.getElementById('scan-btn');
+        btn.addEventListener('click', () => {
+            const link = document.getElementById('link-input').value;
+            if(!link) {
+                tg.showAlert("Lütfen bir link girin!");
+                return;
+            }
+            
+            // Simülasyon: Burada normalde bir API'ye istek atılır
+            document.getElementById('result').innerText = "Taranıyor...";
+            setTimeout(() => {
+                document.getElementById('result').innerText = "✅ Bu bağlantı güvenli görünüyor.";
+                tg.HapticFeedback.notificationOccurred('success'); // Titreşim ver
+            }, 1500);
+        });
+    </script>
+</body>
+</html>
